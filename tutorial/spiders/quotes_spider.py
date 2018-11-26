@@ -21,10 +21,11 @@ class QuotesSpider(scrapy.Spider):
     def parse(self,response):
         """will be called to handle the response downloaded for each request
         and return a TextResponse"""
-        page = response.url.split("/")[-2]
-        filename = 'quotes-%s.html' % page
-        with open(filename, 'wb') as f:
-            f.write(response.body)
-        self.log('Saved file %s' % filename)
+        for tag in response.css('div.tags-box span.tag-item'):
+            yield{
+                'text':tag.css('a::text').extract_first(),
+                'size':tag.css('a::attr(style)').extract_first().split(' ')[-1],
+            }
+
 
 
