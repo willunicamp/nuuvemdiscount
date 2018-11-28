@@ -6,20 +6,25 @@ import scrapy
 class NuuvemSpider(scrapy.Spider):
     """this class gets all games with discount over 80% in www.nuuvem.com,
     ordered by popularity"""
-
     name = "nuuvem" #the name identifies the spider. Must be unique
-    download_delay = 0.5
+
+    def __init__(self, *args, **kwargs):
+        super(NuuvemSpider, self).__init__(*args, **kwargs)
+        self.nuuvem_base_url = ('https://www.nuuvem.com/catalog/sort/'
+                                'bestselling/sort-mode/desc/page/%s.html')
+        #delay for the next request
+        self.download_delay = 0.5
+        self.page = 1
+        discount = getattr(self, 'discount', None)
+        if discount is not None and 0 <= float(discount) <= 100:
+            discount = float(discount) * -1
+        else:
+            discount = -80
+        self.discount = discount
 
     def start_requests(self):
-        ###todo: pass discount by argument
-        self.nuuvem_base_url = 'https://www.nuuvem.com/catalog/sort/bestselling/sort-mode/desc/page/%s.html'
-        self.page = 1
         #start_urls attribute is used by default implementation
-        url = self.nuuvem_base_url % 1   #of start_requests to create the initial requests
-        #delay for the next request
-        #get discount parameter
-        self.discount = getattr(self, 'discount', None)
-        self.discount = -80 if self.discount is None else float(self.discount) * -1
+        url = self.nuuvem_base_url % 1   #of start_requests to create the initial
         yield scrapy.Request(url, self.parse)
 
     def parse(self, response):
